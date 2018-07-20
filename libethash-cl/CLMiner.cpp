@@ -8,6 +8,7 @@
 #include "CLMiner_kernel_experimental.h"
 
 #include <ethash/ethash.hpp>
+#include <boost/dll.hpp>
 
 using namespace dev;
 using namespace eth;
@@ -390,9 +391,6 @@ void CLMiner::workLoop()
             // Report hash count
             addHashCount(m_globalWorkSize);
 
-            // Make sure the last buffer write has finished --
-            // it reads local variable.
-            m_queue.finish();
         }
         m_queue.finish();
     }
@@ -691,7 +689,9 @@ bool CLMiner::init(int epoch)
 
             /* Open kernels/ethash_{devicename}_lws{local_work_size}.bin */
             std::transform(device_name.begin(), device_name.end(), device_name.begin(), ::tolower);
-            fname_strm << "kernels/ethash_" << device_name << "_lws" << m_workgroupSize << ".bin";
+            fname_strm << boost::dll::program_location().parent_path().string() <<
+				"/kernels/ethash_" << device_name << "_lws" << m_workgroupSize << ".bin";
+			cllog << "Loading binary kernel " << fname_strm.str();
             kernel_file.open(fname_strm.str(), ios::in | ios::binary);
 
             if(kernel_file.good()) {
